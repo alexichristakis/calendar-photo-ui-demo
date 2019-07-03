@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "downlevelIteration": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "jsx": "preserve",
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noEmit": true,
+    "noUnusedParameters": true,
+    "strict": true,
+    "target": "ES2017",
+    "moduleResolution": "node",
+    "skipLibCheck": true,
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "resolveJsonModule": true
+  },
+  "exclude": ["node_modules", "**/node_modules/**/*", "commonjs/@types/amazon_connect_streams.ts"],
+  "include": ["./**/*.ts", "./**/*.tsx"]
+}
