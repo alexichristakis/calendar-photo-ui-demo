@@ -30,10 +30,31 @@ interface ProfileProps {
 }
 
 class Profile extends Component<ProfileProps, ProfileState> {
+  yOffset = new Animated.Value(0);
+
+  handleOnScroll = Animated.event([{ nativeEvent: { contentOffset: { y: this.yOffset } } }], {
+    useNativeDriver: true
+  });
+
+  renderListHeader = () => {
+    const parallax = {
+      transform: [
+        {
+          translateY: this.yOffset.interpolate({
+            inputRange: [-100, 0, 100],
+            outputRange: [-50, 0, 0]
+            // extrapolateRight: "clamp"
+          })
+        }
+      ]
+    };
+    return <Animated.Text style={parallax}>Alexi Christakis</Animated.Text>;
+  };
+
   renderSectionHeader = ({ section: { title, data } }) => (
     <View key={title} style={styles.sectionHeaderContainer}>
       <Text style={TextStyles.white}>{title}</Text>
-      <Text style={TextStyles.white}>{`${data.length} elements`}</Text>
+      <Text style={TextStyles.white}>{`${data.length} moments`}</Text>
     </View>
   );
 
@@ -75,16 +96,17 @@ class Profile extends Component<ProfileProps, ProfileState> {
     };
 
     return (
-      <View style={styles.container}>
-        <Animated.View style={swipeThrottle}>
-          <Text>Alexi Christakis</Text>
-          <SectionList
-            renderItem={this.renderMonth}
-            renderSectionHeader={this.renderSectionHeader}
-            sections={SAMPLE_DATA}
-          />
-        </Animated.View>
-      </View>
+      <Animated.View style={styles.container}>
+        <Animated.SectionList
+          style={swipeThrottle}
+          onScroll={this.handleOnScroll}
+          scrollEventThrottle={16}
+          ListHeaderComponent={this.renderListHeader}
+          renderItem={this.renderMonth}
+          renderSectionHeader={this.renderSectionHeader}
+          sections={SAMPLE_DATA}
+        />
+      </Animated.View>
     );
   }
 }
