@@ -3,6 +3,7 @@ import { randomColor } from "lib/utils";
 export const sections = [
   {
     title: "May",
+    sectionIndex: 0,
     data: [
       { title: "item1", color: randomColor() },
       { title: "item2", color: randomColor() },
@@ -23,6 +24,7 @@ export const sections = [
   },
   {
     title: "April",
+    sectionIndex: 1,
     data: [
       { title: "item1", color: randomColor() },
       { title: "item2", color: randomColor() },
@@ -43,6 +45,7 @@ export const sections = [
   },
   {
     title: "March",
+    sectionIndex: 2,
     data: [
       { title: "item1", color: randomColor() },
       { title: "item2", color: randomColor() },
@@ -78,6 +81,7 @@ export const sections = [
   },
   {
     title: "February",
+    sectionIndex: 3,
     data: [
       { title: "item1", color: randomColor() },
       { title: "item2", color: randomColor() },
@@ -108,6 +112,7 @@ export const sections = [
   },
   {
     title: "January",
+    sectionIndex: 4,
     data: [
       { title: "item1", color: randomColor() },
       { title: "item2", color: randomColor() },

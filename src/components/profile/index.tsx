@@ -1,19 +1,10 @@
 import React, { Component } from "react";
-import {
-  Animated,
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  SectionList,
-  TouchableOpacity
-} from "react-native";
+import { Animated, View, Text, StyleSheet } from "react-native";
 
 import { SCREEN_HEIGHT, SCREEN_WIDTH, BUFFER_WIDTH, NAVIGATOR_SNAP_POINTS } from "lib/constants";
 import { Colors, TextStyles } from "lib/styles";
 
 import ProfileImage from "./ProfileImage";
-import Transitioner from "../Transitioner";
 
 import { sections as SAMPLE_DATA } from "./test";
 
@@ -36,39 +27,50 @@ class Profile extends Component<ProfileProps, ProfileState> {
     useNativeDriver: true
   });
 
+  parallax = (amount: number) => ({
+    transform: [
+      {
+        translateY: this.yOffset.interpolate({
+          inputRange: [-100, 0],
+          outputRange: [-50 / (amount + 1), 0],
+          extrapolateRight: "clamp"
+        })
+      }
+    ]
+  });
+
   renderListHeader = () => {
-    const parallax = {
-      transform: [
-        {
-          translateY: this.yOffset.interpolate({
-            inputRange: [-100, 0, 100],
-            outputRange: [-50, 0, 0]
-            // extrapolateRight: "clamp"
-          })
-        }
-      ]
-    };
-    return <Animated.Text style={parallax}>Alexi Christakis</Animated.Text>;
+    return (
+      <Animated.View style={this.parallax(2 / 3 - 1)}>
+        <Text>Alexi Christakis</Text>
+      </Animated.View>
+    );
   };
 
-  renderSectionHeader = ({ section: { title, data } }) => (
-    <View key={title} style={styles.sectionHeaderContainer}>
-      <Text style={TextStyles.white}>{title}</Text>
-      <Text style={TextStyles.white}>{`${data.length} moments`}</Text>
-    </View>
-  );
+  renderSectionHeader = ({ section: { sectionIndex, title, data } }) => {
+    return (
+      <Animated.View
+        key={title}
+        style={[this.parallax(sectionIndex), styles.sectionHeaderContainer]}
+      >
+        <Text style={TextStyles.white}>{title}</Text>
+        <Text style={TextStyles.white}>{`${data.length} moments`}</Text>
+      </Animated.View>
+    );
+  };
 
-  renderMonth = ({ section, index }) => {
-    if (!index)
+  renderMonth = ({ section: { data, sectionIndex }, index }) => {
+    if (!index) {
       return (
-        <FlatList
+        <Animated.FlatList
           key={`month-${index}`}
-          style={styles.monthContainer}
+          style={[this.parallax(sectionIndex), styles.monthContainer]}
           numColumns={5}
-          data={section.data}
+          data={data}
           renderItem={this.renderImage}
         />
       );
+    }
     return null;
   };
 
@@ -89,14 +91,14 @@ class Profile extends Component<ProfileProps, ProfileState> {
         {
           translateX: xOffset.interpolate({
             inputRange: NAVIGATOR_SNAP_POINTS.map(({ x }) => x).reverse(),
-            outputRange: [-20, 0, 20]
+            outputRange: [-25, 0, 25]
           })
         }
       ]
     };
 
     return (
-      <Animated.View style={styles.container}>
+      <View style={styles.container}>
         <Animated.SectionList
           style={swipeThrottle}
           onScroll={this.handleOnScroll}
@@ -106,7 +108,7 @@ class Profile extends Component<ProfileProps, ProfileState> {
           renderSectionHeader={this.renderSectionHeader}
           sections={SAMPLE_DATA}
         />
-      </Animated.View>
+      </View>
     );
   }
 }
