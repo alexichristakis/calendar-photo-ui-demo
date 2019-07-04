@@ -1,5 +1,3 @@
-import {ReduxStateType} from "state"
+import { ReduxStateType } from "state";
 
-export selectFocused = (state: ReduxStateType) => {
-    
-}
+export const selectFocused = ({ app: { focused } }: ReduxStateType) => focused;

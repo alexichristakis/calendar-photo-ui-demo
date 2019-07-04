@@ -1,47 +1,54 @@
 import React, { Component } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
-import { Provider } from "react-redux";
-import { PersistGate } from "redux-persist/integration/react";
+import { connect } from "react-redux";
 import Interactable from "react-native-interactable";
 
 import { ReduxStateType } from "state";
-import configureStore from "state/store";
+import { FocusedType } from "state/app";
 import { selectFocused } from "state/selectors";
 import { SCREEN_WIDTH, SCREEN_HEIGHT, NAVIGATOR_SNAP_POINTS } from "lib/constants";
 
 import Profile from "./profile";
 import Feed from "./feed";
 import Settings from "./settings";
+import Transitioner from "./Transitioner";
 
-const { store, persistor } = configureStore();
-
-interface Props {}
+interface Props {
+  focused: FocusedType;
+}
 class App extends Component<Props> {
   navigatorPosition = new Animated.Value(NAVIGATOR_SNAP_POINTS[2].x);
 
   render() {
     const { focused } = this.props;
-    const { pageX, pageY } = focused;
+    const { visible, startX, startY } = focused;
+
+    const FocusedElement = (
+      <View
+        style={{
+          backgroundColor: focused.image,
+          width: SCREEN_WIDTH - 10,
+          height: SCREEN_WIDTH - 10
+        }}
+      />
+    );
+
     return (
-      <Provider store={store}>
-        <PersistGate loading={null} persistor={persistor}>
-          <Interactable.View
-            horizontalOnly
-            animatedNativeDriver
-            initialPosition={NAVIGATOR_SNAP_POINTS[2]}
-            snapPoints={NAVIGATOR_SNAP_POINTS}
-            style={styles.interactable}
-            animatedValueX={this.navigatorPosition}
-          >
-            <Settings />
-            <Profile xOffset={this.navigatorPosition} />
-            <Feed />
-            <Transitioner start={{ pageX, pageY }}>
-              <ProfileImage {...focused} width={SCREEN_WIDTH - 20} height={SCREEN_WIDTH - 20} />
-            </Transitioner>
-          </Interactable.View>
-        </PersistGate>
-      </Provider>
+      <>
+        <Interactable.View
+          horizontalOnly
+          animatedNativeDriver
+          initialPosition={NAVIGATOR_SNAP_POINTS[2]}
+          snapPoints={NAVIGATOR_SNAP_POINTS}
+          style={styles.interactable}
+          animatedValueX={this.navigatorPosition}
+        >
+          <Settings />
+          <Profile xOffset={this.navigatorPosition} />
+          <Feed />
+        </Interactable.View>
+        <Transitioner visible={visible} x={startX} y={startY} element={FocusedElement} />
+      </>
     );
   }
 }

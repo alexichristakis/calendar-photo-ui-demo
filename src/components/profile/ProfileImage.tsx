@@ -1,5 +1,9 @@
 import React, { PureComponent, Ref } from "react";
 import { Animated, View, Text, TouchableOpacity } from "react-native";
+import { connect } from "react-redux";
+
+import { ReduxStateType } from "state";
+import { setFocus } from "state/app";
 
 interface ProfileImageProps {
   title: string;
@@ -15,11 +19,11 @@ class ProfileImage extends PureComponent<ProfileImageProps> {
   componentDidUpdate(prevState, prevProps) {}
 
   handleOnPress = () => {
-    const { onPress } = this.props;
+    const { color, setFocus } = this.props;
 
     if (this.item)
       this.item.measure((x, y, width, height, pageX, pageY) => {
-        onPress({ pageX, pageY });
+        setFocus({ image: color, startX: pageX, startY: pageY, visible: true });
       });
   };
 
@@ -33,4 +37,13 @@ class ProfileImage extends PureComponent<ProfileImageProps> {
   }
 }
 
-export default ProfileImage;
+const mapStateToProps = (state: ReduxStateType) => ({});
+
+const mapDispatchToProps = {
+  setFocus
+};
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(ProfileImage);

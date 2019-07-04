@@ -8,6 +8,7 @@ import { composeWithDevTools } from "redux-devtools-extension";
 
 const config = {
   key: "root",
+  blacklist: ["app"],
   storage
 };
 

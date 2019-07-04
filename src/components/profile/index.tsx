@@ -13,7 +13,7 @@ import { SCREEN_HEIGHT, SCREEN_WIDTH, BUFFER_WIDTH, NAVIGATOR_SNAP_POINTS } from
 import { Colors, TextStyles } from "lib/styles";
 
 import ProfileImage from "./ProfileImage";
-import Transitioner from "./Transitioner";
+import Transitioner from "../Transitioner";
 
 import { sections as SAMPLE_DATA } from "./test";
 
@@ -30,14 +30,6 @@ interface ProfileProps {
 }
 
 class Profile extends Component<ProfileProps, ProfileState> {
-  state = {
-    focused: { color: "red" },
-    startTransition: {
-      pageX: 0,
-      pageY: 0
-    }
-  };
-
   renderSectionHeader = ({ section: { title, data } }) => (
     <View key={title} style={styles.sectionHeaderContainer}>
       <Text style={TextStyles.white}>{title}</Text>
@@ -69,11 +61,6 @@ class Profile extends Component<ProfileProps, ProfileState> {
   );
 
   render() {
-    const {
-      focused,
-      startTransition: { pageX, pageY }
-    } = this.state;
-
     const { xOffset } = this.props;
 
     const swipeThrottle = {
