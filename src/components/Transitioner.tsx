@@ -49,6 +49,8 @@ class Transitioner extends PureComponent<TransitionerProps> {
     // update value
     this._panAmountValue = { x, y };
 
+    console.log(x, y);
+
     const { transitioning, open } = this.state;
     if ((Math.abs(x) > 100 || Math.abs(y) > 100) && open && !transitioning) {
       this.close();
@@ -158,14 +160,16 @@ class Transitioner extends PureComponent<TransitionerProps> {
         transitioning || !open
           ? this.transitionAmount.interpolate({
               inputRange: [0, 1],
-              outputRange: [0, 0.8]
+              outputRange: [0, 0.8],
+              extrapolate: "clamp"
             })
           : Animated.add(
               Animated.divide(this.panAmount.x, SCREEN_WIDTH),
               Animated.divide(this.panAmount.y, SCREEN_HEIGHT)
             ).interpolate({
               inputRange: [0, 1],
-              outputRange: [0.8, 0]
+              outputRange: [0.8, 0],
+              extrapolate: "clamp"
             })
     };
 
@@ -193,10 +197,10 @@ class Transitioner extends PureComponent<TransitionerProps> {
         </Animated.View>
         <Interactable.View
           animatedNativeDriver
+          style={reactive}
           dragEnabled={!transitioning}
           snapPoints={[{ x: 0, y: 0, damping: 0.5, tension: 500 }]}
           onSnap={this.handleOnSnap}
-          style={reactive}
           animatedValueX={this.panAmount.x}
           animatedValueY={this.panAmount.y}
         >
