@@ -3,7 +3,7 @@ import { Animated, Easing, View, TouchableOpacity, StyleSheet } from "react-nati
 import { connect } from "react-redux";
 import Interactable from "react-native-interactable";
 
-import { ReduxStateType } from "state";
+import { ReduxState } from "state";
 import { focusOff } from "state/app";
 import { Colors } from "lib/styles";
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from "lib/constants";
@@ -25,16 +25,16 @@ class Transitioner extends PureComponent<TransitionerProps> {
   };
 
   transitionAmount = new Animated.Value(0);
-  panAmount = new Animated.ValueXY({ x: 0, y: 0 });
-  _panAmountValue = { x: 0, y: 0 };
+  pan = new Animated.ValueXY({ x: 0, y: 0 });
+  _panAmount = { x: 0, y: 0 };
   panListener = "";
 
   componentDidMount() {
-    this.panListener = this.panAmount.addListener(this.handleInteractablePan);
+    this.panListener = this.pan.addListener(this.handleInteractablePan);
   }
 
   componentWillUnmount() {
-    this.panAmount.removeListener(this.panListener);
+    this.pan.removeListener(this.panListener);
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -46,14 +46,14 @@ class Transitioner extends PureComponent<TransitionerProps> {
   }
 
   handleInteractablePan = ({ x, y }: { x: number; y: number }) => {
-    // update value
-    this._panAmountValue = { x, y };
+    this._panAmount = { x: Math.abs(x), y: Math.abs(y) };
+  };
 
-    console.log(x, y);
-
-    const { transitioning, open } = this.state;
-    if ((Math.abs(x) > 100 || Math.abs(y) > 100) && open && !transitioning) {
-      this.close();
+  handleOnDrag = ({ nativeEvent: { state, x, y } }: Interactable.IDragEvent) => {
+    if (state == "end") {
+      if (Math.abs(x) > 30 || Math.abs(y) > 30) {
+        this.close();
+      }
     }
   };
 
@@ -72,7 +72,7 @@ class Transitioner extends PureComponent<TransitionerProps> {
 
   close = () => {
     const { focusOff } = this.props;
-    const { x, y } = this._panAmountValue;
+    const { x, y } = this._panAmount;
 
     const currentProgress = x / SCREEN_WIDTH + y / SCREEN_HEIGHT;
 
@@ -112,8 +112,8 @@ class Transitioner extends PureComponent<TransitionerProps> {
                 extrapolate: "clamp"
               })
             : Animated.add(
-                Animated.divide(this.panAmount.x, SCREEN_WIDTH),
-                Animated.divide(this.panAmount.y, SCREEN_HEIGHT)
+                Animated.divide(this.pan.x, SCREEN_WIDTH),
+                Animated.divide(this.pan.y, SCREEN_HEIGHT)
               ).interpolate({
                 inputRange: [0, 1],
                 outputRange: [1, 50 / (SCREEN_WIDTH - 20)],
@@ -124,35 +124,20 @@ class Transitioner extends PureComponent<TransitionerProps> {
     };
 
     const animatedTranslate = {
-      transform: transitioning
-        ? [
-            {
-              translateY: this.transitionAmount.interpolate({
-                inputRange: [0, 1],
-                outputRange: [-1 * (SCREEN_HEIGHT / 2) + y + 30, 0]
-              })
-            },
-            {
-              translateX: this.transitionAmount.interpolate({
-                inputRange: [0, 1],
-                outputRange: [x - SCREEN_WIDTH / 2 + 30, 0]
-              })
-            }
-          ]
-        : [
-            {
-              translateY: Animated.divide(this.panAmount.y, SCREEN_HEIGHT).interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, -1 * (SCREEN_HEIGHT / 2) + y + 30]
-              })
-            },
-            {
-              translateX: Animated.divide(this.panAmount.x, SCREEN_WIDTH).interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, x - SCREEN_WIDTH / 2 + 30]
-              })
-            }
-          ]
+      transform: [
+        {
+          translateY: this.transitionAmount.interpolate({
+            inputRange: [0, 1],
+            outputRange: [-1 * (SCREEN_HEIGHT / 2) + y + 25, 0]
+          })
+        },
+        {
+          translateX: this.transitionAmount.interpolate({
+            inputRange: [0, 1],
+            outputRange: [x - SCREEN_WIDTH / 2 + 25, 0]
+          })
+        }
+      ]
     };
 
     const animatedBackground = {
@@ -164,8 +149,8 @@ class Transitioner extends PureComponent<TransitionerProps> {
               extrapolate: "clamp"
             })
           : Animated.add(
-              Animated.divide(this.panAmount.x, SCREEN_WIDTH),
-              Animated.divide(this.panAmount.y, SCREEN_HEIGHT)
+              Animated.divide(this.pan.x, SCREEN_WIDTH),
+              Animated.divide(this.pan.y, SCREEN_HEIGHT)
             ).interpolate({
               inputRange: [0, 1],
               outputRange: [0.8, 0],
@@ -173,36 +158,18 @@ class Transitioner extends PureComponent<TransitionerProps> {
             })
     };
 
-    const reactive = {
-      transform: [
-        {
-          translateX: this.panAmount.x.interpolate({
-            inputRange: [-100, 0, 100],
-            outputRange: [100, 0, -100]
-          })
-        },
-        {
-          translateY: this.panAmount.y.interpolate({
-            inputRange: [-100, 0, 100],
-            outputRange: [100, 0, -100]
-          })
-        }
-      ]
-    };
-
     return (
       <View style={styles.container} pointerEvents={visible ? "box-none" : "none"}>
         <Animated.View style={[animatedBackground, styles.background]}>
-          <TouchableOpacity style={styles.flex} onPress={this.close} />
+          <TouchableOpacity activeOpacity={1} style={styles.flex} onPress={this.close} />
         </Animated.View>
         <Interactable.View
           animatedNativeDriver
-          style={reactive}
-          dragEnabled={!transitioning}
+          dragEnabled={open}
           snapPoints={[{ x: 0, y: 0, damping: 0.5, tension: 500 }]}
-          onSnap={this.handleOnSnap}
-          animatedValueX={this.panAmount.x}
-          animatedValueY={this.panAmount.y}
+          onDrag={this.handleOnDrag}
+          animatedValueX={this.pan.x}
+          animatedValueY={this.pan.y}
         >
           <Animated.View style={animatedTranslate}>
             <Animated.View style={animatedScale}>{visible ? element : null}</Animated.View>
@@ -236,7 +203,7 @@ const styles = StyleSheet.create({
   }
 });
 
-const mapStateToProps = (state: ReduxStateType) => ({});
+const mapStateToProps = (state: ReduxState) => ({});
 
 const mapDispatchToProps = { focusOff };
 

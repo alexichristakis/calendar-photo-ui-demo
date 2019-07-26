@@ -2,7 +2,7 @@ import { filterActions } from "redux-ignore";
 
 import app, { AppStateType } from "./app";
 
-export interface ReduxStateType {
+export interface ReduxState {
   app: AppStateType;
 }
 

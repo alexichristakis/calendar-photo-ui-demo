@@ -39,18 +39,10 @@ class Profile extends Component<ProfileProps, ProfileState> {
     ]
   });
 
-  renderListHeader = () => {
-    return (
-      <Animated.View style={this.parallax(2 / 3 - 1)}>
-        <Text>Alexi Christakis</Text>
-      </Animated.View>
-    );
-  };
-
   renderSectionHeader = ({ section: { sectionIndex, title, data } }) => {
     return (
       <Animated.View
-        key={title}
+        key={`section-${title}`}
         style={[this.parallax(sectionIndex), styles.sectionHeaderContainer]}
       >
         <Text style={TextStyles.white}>{title}</Text>
@@ -64,8 +56,8 @@ class Profile extends Component<ProfileProps, ProfileState> {
       return (
         <Animated.FlatList
           key={`month-${index}`}
-          style={[this.parallax(sectionIndex), styles.monthContainer]}
           numColumns={5}
+          style={[this.parallax(sectionIndex), styles.monthContainer]}
           data={data}
           renderItem={this.renderImage}
         />
@@ -75,12 +67,7 @@ class Profile extends Component<ProfileProps, ProfileState> {
   };
 
   renderImage = ({ item, index }) => (
-    <ProfileImage
-      {...item}
-      onPress={({ pageX, pageY }) =>
-        this.setState({ focused: item, startTransition: { pageX, pageY } })
-      }
-    />
+    <ProfileImage key={`image-${item.id}`} style={{ margin: 5 }} {...item} />
   );
 
   render() {
@@ -99,11 +86,11 @@ class Profile extends Component<ProfileProps, ProfileState> {
 
     return (
       <View style={styles.container}>
+        <Animated.Text style={this.parallax(-2 - 2 / 3)}>Alexi Christakis</Animated.Text>
         <Animated.SectionList
           style={swipeThrottle}
           onScroll={this.handleOnScroll}
           scrollEventThrottle={16}
-          ListHeaderComponent={this.renderListHeader}
           renderItem={this.renderMonth}
           renderSectionHeader={this.renderSectionHeader}
           sections={SAMPLE_DATA}

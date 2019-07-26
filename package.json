@@ -10,7 +10,8 @@
   "dependencies": {
     "react": "16.8.6",
     "react-native": "0.60.3",
-    "react-native-interactable": "^1.0.0"
+    "react-native-interactable": "^1.0.0",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "@babel/core": "^7.5.4",

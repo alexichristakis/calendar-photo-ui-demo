@@ -1,20 +1,22 @@
 import { Theme, defaultTheme } from "lib/themes";
 
-export interface FocusedType {
+export interface Focused {
+  id: string;
   image: string;
   visible: boolean;
   startX: number;
   startY: number;
 }
 
-export interface AppStateType {
+export interface AppState {
   theme: Theme;
-  focused: FocusedType;
+  focused: Focused;
 }
 
-const initialState: AppStateType = {
+const initialState: AppState = {
   theme: defaultTheme,
   focused: {
+    id: "",
     image: "",
     visible: false,
     startX: -1,
@@ -55,7 +57,7 @@ export const setTheme = (theme: Theme) => ({
   theme
 });
 
-export const setFocus = (focused: FocusedType) => ({
+export const setFocus = (focused: Focused) => ({
   type: SET_FOCUS,
   focused
 });

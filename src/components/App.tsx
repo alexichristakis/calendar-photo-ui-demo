@@ -3,8 +3,8 @@ import { Animated, StyleSheet, Text, View } from "react-native";
 import { connect } from "react-redux";
 import Interactable from "react-native-interactable";
 
-import { ReduxStateType } from "state";
-import { FocusedType } from "state/app";
+import { ReduxState } from "state";
+import { Focused } from "state/app";
 import { selectFocused } from "state/selectors";
 import { SCREEN_WIDTH, SCREEN_HEIGHT, NAVIGATOR_SNAP_POINTS } from "lib/constants";
 
@@ -14,7 +14,7 @@ import Settings from "./settings";
 import Transitioner from "./Transitioner";
 
 interface Props {
-  focused: FocusedType;
+  focused: Focused;
 }
 class App extends Component<Props> {
   navigatorPosition = new Animated.Value(NAVIGATOR_SNAP_POINTS[2].x);
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
   }
 });
 
-const mapStateToProps = (state: ReduxStateType) => ({
+const mapStateToProps = (state: ReduxState) => ({
   focused: selectFocused(state)
 });
 

@@ -1,43 +1,56 @@
 import React, { PureComponent, Ref } from "react";
-import { Animated, View, Text, TouchableOpacity } from "react-native";
+import { View, TouchableOpacity, ViewStyle, findNodeHandle } from "react-native";
 import { connect } from "react-redux";
 
-import { ReduxStateType } from "state";
-import { setFocus } from "state/app";
+import { ReduxState } from "state";
+import { setFocus, Focused } from "state/app";
+import { selectFocused } from "state/selectors";
 
 interface ProfileImageProps {
+  id: string;
   title: string;
+  style?: ViewStyle;
   color: string;
   width: number;
   height: number;
-  onPress: ({ pageX, pageY }: { pageX: number; pageY: number }) => {};
 }
 
-class ProfileImage extends PureComponent<ProfileImageProps> {
-  item: Ref<TouchableOpacity> = React.createRef();
+interface ProfileImageReduxProps {
+  setFocus: (focused: Focused) => void;
+  isFocused: boolean;
+}
 
-  componentDidUpdate(prevState, prevProps) {}
+class ProfileImage extends PureComponent<ProfileImageProps & ProfileImageReduxProps> {
+  item: TouchableOpacity | null = null;
 
   handleOnPress = () => {
-    const { color, setFocus } = this.props;
+    const { id, color, setFocus } = this.props;
 
     if (this.item)
-      this.item.measure((x, y, width, height, pageX, pageY) => {
-        setFocus({ image: color, startX: pageX, startY: pageY, visible: true });
+      this.item.measureInWindow((x, y) => {
+        setFocus({ id, image: color, startX: x, startY: y, visible: true });
       });
   };
 
   render() {
-    const { color, width = 50, height = 50 } = this.props;
-    return (
-      <TouchableOpacity ref={view => (this.item = view)} onPress={this.handleOnPress}>
-        <Animated.View style={{ width, height, backgroundColor: color, margin: 5 }} />
-      </TouchableOpacity>
-    );
+    const { isFocused, color, style = {}, width = 50, height = 50 } = this.props;
+    if (!isFocused)
+      return (
+        <TouchableOpacity
+          style={style}
+          ref={view => (this.item = view)}
+          onPress={this.handleOnPress}
+        >
+          <View style={{ width, height, backgroundColor: color }} />
+        </TouchableOpacity>
+      );
+    else return <View style={[style, { width, height }]} />;
   }
 }
 
-const mapStateToProps = (state: ReduxStateType) => ({});
+const mapStateToProps = (state: ReduxState, props: ProfileImageProps) => ({
+  isFocused: selectFocused(state).id === props.id
+});
 
 const mapDispatchToProps = {
   setFocus
