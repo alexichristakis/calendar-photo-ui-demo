@@ -11,6 +11,8 @@ PODS:
     - DoubleConversion
     - glog
   - glog (0.3.5)
+  - Interactable (1.0.0):
+    - React
   - React (0.60.3):
     - React-Core (= 0.60.3)
     - React-DevSupport (= 0.60.3)
@@ -87,6 +89,7 @@ DEPENDENCIES:
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - Folly (from `../node_modules/react-native/third-party-podspecs/Folly.podspec`)
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
+  - Interactable (from `../node_modules/react-native-interactable`)
   - React (from `../node_modules/react-native/`)
   - React-Core (from `../node_modules/react-native/React`)
   - React-cxxreact (from `../node_modules/react-native/ReactCommon/cxxreact`)
@@ -118,6 +121,8 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/react-native/third-party-podspecs/Folly.podspec"
   glog:
     :podspec: "../node_modules/react-native/third-party-podspecs/glog.podspec"
+  Interactable:
+    :path: "../node_modules/react-native-interactable"
   React:
     :path: "../node_modules/react-native/"
   React-Core:
@@ -162,6 +167,7 @@ SPEC CHECKSUMS:
   DoubleConversion: 5805e889d232975c086db112ece9ed034df7a0b2
   Folly: 30e7936e1c45c08d884aa59369ed951a8e68cf51
   glog: 1f3da668190260b06b429bb211bfbee5cd790c28
+  Interactable: 58b1decd58e30ecf2e33e0d1b023f963751f8632
   React: ac23e9cc8d2d4cfe9b536b5cc0c32d19b9937bcf
   React-Core: 84de3cf80e31f0267c5ce0b5b482d59ce30a8a57
   React-cxxreact: a802a1c6b14f3de66ba032460b424c17ececd1e2

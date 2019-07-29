@@ -4,21 +4,28 @@ import { connect } from "react-redux";
 import Interactable from "react-native-interactable";
 
 import { ReduxState } from "state";
-import { focusOff } from "state/app";
+import { focusOff, Focused } from "state/app";
+import { selectFocused } from "state/selectors";
 import { Colors } from "lib/styles";
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from "lib/constants";
 
-interface TransitionerProps {
-  x: number;
-  y: number;
-  visible: boolean;
-  element: React.ReactNode;
-  focusOff: () => {};
+interface TransitionerProps {}
+interface TransitionerReduxProps extends Focused {
+  focusOff: () => void;
 }
 
-const ANIMATION_DURATION = 250;
+interface TransitionerState {
+  open: boolean;
+  transitioning: boolean;
+}
 
-class Transitioner extends PureComponent<TransitionerProps> {
+const ANIMATION_DURATION = 225;
+const SNAP_POINTS = [{ x: 0, y: 0, damping: 0.5, tension: 500 }];
+
+class Transitioner extends PureComponent<
+  TransitionerProps & TransitionerReduxProps,
+  TransitionerState
+> {
   state = {
     open: false,
     transitioning: false
@@ -37,11 +44,14 @@ class Transitioner extends PureComponent<TransitionerProps> {
     this.pan.removeListener(this.panListener);
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(
+    prevProps: TransitionerProps & TransitionerReduxProps,
+    prevState: TransitionerState
+  ) {
     const { transitioning, open } = this.state;
     const { visible } = this.props;
     if (visible && !open && !transitioning) {
-      this.open();
+      requestAnimationFrame(() => this.open());
     }
   }
 
@@ -63,11 +73,9 @@ class Transitioner extends PureComponent<TransitionerProps> {
         useNativeDriver: true,
         toValue: 1,
         duration: ANIMATION_DURATION,
-        easing: Easing.ease
+        easing: Easing.out(Easing.quad)
       }).start(() => this.setState({ transitioning: false, open: true }));
     });
-
-    // this.interactable.snapTo({ index: 1 });
   };
 
   close = () => {
@@ -76,16 +84,16 @@ class Transitioner extends PureComponent<TransitionerProps> {
 
     const currentProgress = x / SCREEN_WIDTH + y / SCREEN_HEIGHT;
 
-    this.setState({ transitioning: true }, () => {
+    this.setState({ transitioning: true, open: false }, () => {
       this.transitionAmount.setValue(1 - currentProgress);
       Animated.timing(this.transitionAmount, {
         useNativeDriver: true,
         toValue: 0,
         duration: ANIMATION_DURATION,
-        easing: Easing.out(Easing.ease)
+        easing: Easing.out(Easing.quad)
       }).start(() => {
         focusOff();
-        this.setState({ transitioning: false, open: false });
+        this.setState({ transitioning: false });
       });
     });
   };
@@ -98,9 +106,27 @@ class Transitioner extends PureComponent<TransitionerProps> {
     // }
   };
 
+  renderChildren = () => {
+    const { visible, image } = this.props;
+    const { transitioning, open } = this.state;
+
+    const FocusedElement = (
+      <View
+        style={{
+          backgroundColor: image,
+          width: SCREEN_WIDTH - 10,
+          height: SCREEN_WIDTH - 10
+        }}
+      />
+    );
+
+    if (visible && (transitioning || open)) return FocusedElement;
+    else return null;
+  };
+
   render() {
     const { transitioning, open } = this.state;
-    const { visible, element, x, y } = this.props;
+    const { visible, startX, startY } = this.props;
 
     const animatedScale = {
       transform: [
@@ -128,13 +154,13 @@ class Transitioner extends PureComponent<TransitionerProps> {
         {
           translateY: this.transitionAmount.interpolate({
             inputRange: [0, 1],
-            outputRange: [-1 * (SCREEN_HEIGHT / 2) + y + 25, 0]
+            outputRange: [-1 * (SCREEN_HEIGHT / 2) + startY + 25, 0]
           })
         },
         {
           translateX: this.transitionAmount.interpolate({
             inputRange: [0, 1],
-            outputRange: [x - SCREEN_WIDTH / 2 + 25, 0]
+            outputRange: [startX - SCREEN_WIDTH / 2 + 25, 0]
           })
         }
       ]
@@ -160,19 +186,24 @@ class Transitioner extends PureComponent<TransitionerProps> {
 
     return (
       <View style={styles.container} pointerEvents={visible ? "box-none" : "none"}>
-        <Animated.View style={[animatedBackground, styles.background]}>
-          <TouchableOpacity activeOpacity={1} style={styles.flex} onPress={this.close} />
-        </Animated.View>
+        {visible && (
+          <Animated.View
+            pointerEvents={open ? "auto" : "none"}
+            style={[animatedBackground, styles.background]}
+          >
+            <TouchableOpacity activeOpacity={1} style={styles.flex} onPress={this.close} />
+          </Animated.View>
+        )}
         <Interactable.View
           animatedNativeDriver
           dragEnabled={open}
-          snapPoints={[{ x: 0, y: 0, damping: 0.5, tension: 500 }]}
+          snapPoints={SNAP_POINTS}
           onDrag={this.handleOnDrag}
           animatedValueX={this.pan.x}
           animatedValueY={this.pan.y}
         >
           <Animated.View style={animatedTranslate}>
-            <Animated.View style={animatedScale}>{visible ? element : null}</Animated.View>
+            <Animated.View style={animatedScale}>{this.renderChildren()}</Animated.View>
           </Animated.View>
         </Interactable.View>
       </View>
@@ -203,7 +234,7 @@ const styles = StyleSheet.create({
   }
 });
 
-const mapStateToProps = (state: ReduxState) => ({});
+const mapStateToProps = (state: ReduxState) => ({ ...selectFocused(state) });
 
 const mapDispatchToProps = { focusOff };
 

@@ -4,8 +4,6 @@ import { connect } from "react-redux";
 import Interactable from "react-native-interactable";
 
 import { ReduxState } from "state";
-import { Focused } from "state/app";
-import { selectFocused } from "state/selectors";
 import { SCREEN_WIDTH, SCREEN_HEIGHT, NAVIGATOR_SNAP_POINTS } from "lib/constants";
 
 import Profile from "./profile";
@@ -13,26 +11,11 @@ import Feed from "./feed";
 import Settings from "./settings";
 import Transitioner from "./Transitioner";
 
-interface Props {
-  focused: Focused;
-}
+interface Props {}
 class App extends Component<Props> {
   navigatorPosition = new Animated.Value(NAVIGATOR_SNAP_POINTS[2].x);
 
   render() {
-    const { focused } = this.props;
-    const { visible, startX, startY } = focused;
-
-    const FocusedElement = (
-      <View
-        style={{
-          backgroundColor: focused.image,
-          width: SCREEN_WIDTH - 10,
-          height: SCREEN_WIDTH - 10
-        }}
-      />
-    );
-
     return (
       <>
         <Interactable.View
@@ -47,7 +30,7 @@ class App extends Component<Props> {
           <Profile xOffset={this.navigatorPosition} />
           <Feed />
         </Interactable.View>
-        <Transitioner visible={visible} x={startX} y={startY} element={FocusedElement} />
+        <Transitioner />
       </>
     );
   }
@@ -61,9 +44,7 @@ const styles = StyleSheet.create({
   }
 });
 
-const mapStateToProps = (state: ReduxState) => ({
-  focused: selectFocused(state)
-});
+const mapStateToProps = (state: ReduxState) => ({});
 
 const mapDispatchToProps = {};
 

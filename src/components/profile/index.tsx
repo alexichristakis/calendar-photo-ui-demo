@@ -4,7 +4,7 @@ import { Animated, View, Text, StyleSheet } from "react-native";
 import { SCREEN_HEIGHT, SCREEN_WIDTH, BUFFER_WIDTH, NAVIGATOR_SNAP_POINTS } from "lib/constants";
 import { Colors, TextStyles } from "lib/styles";
 
-import ProfileImage from "./ProfileImage";
+import ProfileImage, { Image } from "./ProfileImage";
 
 import { sections as SAMPLE_DATA } from "./test";
 
@@ -66,7 +66,7 @@ class Profile extends Component<ProfileProps, ProfileState> {
     return null;
   };
 
-  renderImage = ({ item, index }) => (
+  renderImage = ({ item, index }: { item: Image; index: number }) => (
     <ProfileImage key={`image-${item.id}`} style={{ margin: 5 }} {...item} />
   );
 

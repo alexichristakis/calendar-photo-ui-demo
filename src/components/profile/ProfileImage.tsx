@@ -1,4 +1,4 @@
-import React, { PureComponent, Ref } from "react";
+import React, { Component } from "react";
 import { View, TouchableOpacity, ViewStyle, findNodeHandle } from "react-native";
 import { connect } from "react-redux";
 
@@ -6,13 +6,16 @@ import { ReduxState } from "state";
 import { setFocus, Focused } from "state/app";
 import { selectFocused } from "state/selectors";
 
-interface ProfileImageProps {
+export type Image = {
   id: string;
   title: string;
-  style?: ViewStyle;
   color: string;
-  width: number;
-  height: number;
+};
+
+interface ProfileImageProps extends Image {
+  style?: ViewStyle;
+  width?: number;
+  height?: number;
 }
 
 interface ProfileImageReduxProps {
@@ -20,15 +23,23 @@ interface ProfileImageReduxProps {
   isFocused: boolean;
 }
 
-class ProfileImage extends PureComponent<ProfileImageProps & ProfileImageReduxProps> {
+class ProfileImage extends Component<ProfileImageProps & ProfileImageReduxProps> {
   item: TouchableOpacity | null = null;
+
+  shouldComponentUpdate(nextProps: ProfileImageProps & ProfileImageReduxProps) {
+    if (nextProps.isFocused !== this.props.isFocused) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 
   handleOnPress = () => {
     const { id, color, setFocus } = this.props;
 
     if (this.item)
-      this.item.measureInWindow((x, y) => {
-        setFocus({ id, image: color, startX: x, startY: y, visible: true });
+      this.item.measureInWindow((startX, startY) => {
+        setFocus({ id, startX, startY, image: color, visible: true });
       });
   };
 
