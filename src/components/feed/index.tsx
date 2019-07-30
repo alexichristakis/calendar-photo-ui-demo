@@ -1,12 +1,22 @@
 import React, { Component } from "react";
-import { View, Text, FlatList } from "react-native";
+import { Animated, View, Text, FlatList } from "react-native";
 
 import { SCREEN_HEIGHT, SCREEN_WIDTH, BUFFER_WIDTH } from "lib/constants";
 import { randomColor } from "lib/utils";
 
-import SAMPLE_DATA from "./test.json";
+import SAMPLE_DATA from "./test";
 
-class Feed extends Component {
+interface FeedProps {
+  xOffset: Animated.Value;
+}
+
+class Feed extends Component<FeedProps> {
+  yOffset = new Animated.Value(0);
+
+  handleOnScroll = Animated.event([{ nativeEvent: { contentOffset: { y: this.yOffset } } }], {
+    useNativeDriver: true
+  });
+
   renderImage = ({ item, index }) => (
     <View
       key={`feed-image-${index}`}
@@ -26,6 +36,12 @@ class Feed extends Component {
     </View>
   );
 
+  renderScrollIndicator = () => {
+    const { xOffset } = this.props;
+
+    return <Animated.View />;
+  };
+
   render() {
     return (
       <View
@@ -35,8 +51,14 @@ class Feed extends Component {
           paddingTop: 50
         }}
       >
-        <Text>this is the feed page</Text>
-        <FlatList data={SAMPLE_DATA} renderItem={this.renderImage} />
+        {this.renderScrollIndicator()}
+        <Animated.FlatList
+          showsVerticalScrollIndicator={false}
+          onScroll={this.handleOnScroll}
+          scrollEventThrottle={16}
+          data={SAMPLE_DATA}
+          renderItem={this.renderImage}
+        />
       </View>
     );
   }

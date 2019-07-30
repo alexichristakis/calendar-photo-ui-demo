@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import { connect } from "react-redux";
-import Interactable from "react-native-interactable";
+import Interactable, { IInteractableView, IInteractable } from "react-native-interactable";
 
 import { ReduxState } from "state";
 import { SCREEN_WIDTH, SCREEN_HEIGHT, NAVIGATOR_SNAP_POINTS } from "lib/constants";
@@ -13,12 +13,16 @@ import Transitioner from "./Transitioner";
 
 interface Props {}
 class App extends Component<Props> {
+  // @ts-ignore
+  navigator: Interactable.View | null = null;
+
   navigatorPosition = new Animated.Value(NAVIGATOR_SNAP_POINTS[2].x);
 
   render() {
     return (
       <>
         <Interactable.View
+          ref={view => (this.navigator = view)}
           horizontalOnly
           animatedNativeDriver
           initialPosition={NAVIGATOR_SNAP_POINTS[2]}
@@ -28,7 +32,7 @@ class App extends Component<Props> {
         >
           <Settings />
           <Profile xOffset={this.navigatorPosition} />
-          <Feed />
+          <Feed xOffset={this.navigatorPosition} />
         </Interactable.View>
         <Transitioner />
       </>

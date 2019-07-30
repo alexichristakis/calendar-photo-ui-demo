@@ -2,6 +2,7 @@ import React, { PureComponent } from "react";
 import { Animated, Easing, View, TouchableOpacity, StyleSheet } from "react-native";
 import { connect } from "react-redux";
 import Interactable from "react-native-interactable";
+import { BlurView } from "@react-native-community/blur";
 
 import { ReduxState } from "state";
 import { focusOff, Focused } from "state/app";
@@ -20,7 +21,7 @@ interface TransitionerState {
 }
 
 const ANIMATION_DURATION = 225;
-const SNAP_POINTS = [{ x: 0, y: 0, damping: 0.5, tension: 500 }];
+const SNAP_POINTS = [{ x: 0, y: 0, damping: 0.5, tension: 700 }];
 
 class Transitioner extends PureComponent<
   TransitionerProps & TransitionerReduxProps,
@@ -32,7 +33,13 @@ class Transitioner extends PureComponent<
   };
 
   transitionAmount = new Animated.Value(0);
+  transitionTranslate = new Animated.ValueXY({ x: 0, y: 0 });
+
   pan = new Animated.ValueXY({ x: 0, y: 0 });
+  panDistance = Animated.add(
+    Animated.divide(Animated.multiply(this.pan.x, this.pan.x), SCREEN_WIDTH * SCREEN_WIDTH),
+    Animated.divide(Animated.multiply(this.pan.y, this.pan.y), SCREEN_HEIGHT * SCREEN_HEIGHT)
+  );
   _panAmount = { x: 0, y: 0 };
   panListener = "";
 
@@ -56,12 +63,12 @@ class Transitioner extends PureComponent<
   }
 
   handleInteractablePan = ({ x, y }: { x: number; y: number }) => {
-    this._panAmount = { x: Math.abs(x), y: Math.abs(y) };
+    this._panAmount = { x, y };
   };
 
   handleOnDrag = ({ nativeEvent: { state, x, y } }: Interactable.IDragEvent) => {
     if (state == "end") {
-      if (Math.abs(x) > 30 || Math.abs(y) > 30) {
+      if (Math.abs(x) > 50 || Math.abs(y) > 50) {
         this.close();
       }
     }
@@ -69,12 +76,18 @@ class Transitioner extends PureComponent<
 
   open = () => {
     this.setState({ transitioning: true }, () => {
-      Animated.timing(this.transitionAmount, {
+      const config = {
         useNativeDriver: true,
         toValue: 1,
         duration: ANIMATION_DURATION,
         easing: Easing.out(Easing.quad)
-      }).start(() => this.setState({ transitioning: false, open: true }));
+      };
+
+      Animated.parallel([
+        Animated.timing(this.transitionAmount, config),
+        Animated.timing(this.transitionTranslate.x, config),
+        Animated.timing(this.transitionTranslate.y, config)
+      ]).start(() => this.setState({ transitioning: false, open: true }));
     });
   };
 
@@ -82,17 +95,28 @@ class Transitioner extends PureComponent<
     const { focusOff } = this.props;
     const { x, y } = this._panAmount;
 
-    const currentProgress = x / SCREEN_WIDTH + y / SCREEN_HEIGHT;
+    const currentPanProportion =
+      (x * x) / (SCREEN_WIDTH * SCREEN_WIDTH) + (y * y) / (SCREEN_HEIGHT * SCREEN_HEIGHT);
 
+    this.transitionAmount.setValue(1 - currentPanProportion);
     this.setState({ transitioning: true, open: false }, () => {
-      this.transitionAmount.setValue(1 - currentProgress);
-      Animated.timing(this.transitionAmount, {
+      const config = {
         useNativeDriver: true,
         toValue: 0,
         duration: ANIMATION_DURATION,
         easing: Easing.out(Easing.quad)
-      }).start(() => {
+      };
+
+      Animated.parallel([
+        Animated.timing(this.transitionAmount, config),
+        Animated.timing(this.transitionTranslate.x, config),
+        Animated.timing(this.transitionTranslate.y, config)
+      ]).start(() => {
+        // cleanup
         focusOff();
+        this.transitionAmount.setValue(0);
+        this.transitionTranslate.setValue({ x: 0, y: 0 });
+        this.pan.setValue({ x: 0, y: 0 });
         this.setState({ transitioning: false });
       });
     });
@@ -106,7 +130,7 @@ class Transitioner extends PureComponent<
     // }
   };
 
-  renderChildren = () => {
+  renderChild = () => {
     const { visible, image } = this.props;
     const { transitioning, open } = this.state;
 
@@ -137,10 +161,7 @@ class Transitioner extends PureComponent<
                 outputRange: [50 / (SCREEN_WIDTH - 20), 1],
                 extrapolate: "clamp"
               })
-            : Animated.add(
-                Animated.divide(this.pan.x, SCREEN_WIDTH),
-                Animated.divide(this.pan.y, SCREEN_HEIGHT)
-              ).interpolate({
+            : this.panDistance.interpolate({
                 inputRange: [0, 1],
                 outputRange: [1, 50 / (SCREEN_WIDTH - 20)],
                 extrapolate: "clamp"
@@ -152,13 +173,13 @@ class Transitioner extends PureComponent<
     const animatedTranslate = {
       transform: [
         {
-          translateY: this.transitionAmount.interpolate({
+          translateY: this.transitionTranslate.y.interpolate({
             inputRange: [0, 1],
             outputRange: [-1 * (SCREEN_HEIGHT / 2) + startY + 25, 0]
           })
         },
         {
-          translateX: this.transitionAmount.interpolate({
+          translateX: this.transitionTranslate.x.interpolate({
             inputRange: [0, 1],
             outputRange: [startX - SCREEN_WIDTH / 2 + 25, 0]
           })
@@ -171,15 +192,12 @@ class Transitioner extends PureComponent<
         transitioning || !open
           ? this.transitionAmount.interpolate({
               inputRange: [0, 1],
-              outputRange: [0, 0.8],
+              outputRange: [0, 1],
               extrapolate: "clamp"
             })
-          : Animated.add(
-              Animated.divide(this.pan.x, SCREEN_WIDTH),
-              Animated.divide(this.pan.y, SCREEN_HEIGHT)
-            ).interpolate({
+          : this.panDistance.interpolate({
               inputRange: [0, 1],
-              outputRange: [0.8, 0],
+              outputRange: [1, 0],
               extrapolate: "clamp"
             })
     };
@@ -187,11 +205,15 @@ class Transitioner extends PureComponent<
     return (
       <View style={styles.container} pointerEvents={visible ? "box-none" : "none"}>
         {visible && (
-          <Animated.View
-            pointerEvents={open ? "auto" : "none"}
-            style={[animatedBackground, styles.background]}
-          >
-            <TouchableOpacity activeOpacity={1} style={styles.flex} onPress={this.close} />
+          <Animated.View style={[animatedBackground, styles.background]}>
+            <TouchableOpacity
+              disabled={transitioning}
+              activeOpacity={1}
+              style={styles.flex}
+              onPress={this.close}
+            >
+              <BlurView blurType={"dark"} style={styles.flex} />
+            </TouchableOpacity>
           </Animated.View>
         )}
         <Interactable.View
@@ -203,7 +225,7 @@ class Transitioner extends PureComponent<
           animatedValueY={this.pan.y}
         >
           <Animated.View style={animatedTranslate}>
-            <Animated.View style={animatedScale}>{this.renderChildren()}</Animated.View>
+            <Animated.View style={animatedScale}>{this.renderChild()}</Animated.View>
           </Animated.View>
         </Interactable.View>
       </View>
@@ -218,7 +240,7 @@ const styles = StyleSheet.create({
   container: {
     position: "absolute",
     left: 0,
-    width: SCREEN_WIDTH,
+    right: 0,
     bottom: 0,
     top: 0,
     alignItems: "center",
@@ -229,8 +251,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     top: 0,
-    bottom: 0,
-    backgroundColor: Colors.darkGray
+    bottom: 0
+    // backgroundColor: Colors.darkGray
   }
 });
 
